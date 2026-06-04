@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Validador de Anilhas CTO — InternetWay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #08111f;
+  --bg2:      #0d1b2e;
+  --bg3:      #112240;
+  --bg4:      #162d4e;
+  --bg5:      #1a3560;
+  --accent:   #e85d04;
+  --accent2:  #ff7c2a;
+  --accent-dim:    rgba(232,93,4,0.12);
+  --accent-border: rgba(232,93,4,0.30);
+  --text:  #e8f0fe;
+  --text2: #8baac8;
+  --text3: #4d6b8a;
+  --green:        #22c55e;
+  --green-bg:     rgba(34,197,94,0.08);
+  --green-border: rgba(34,197,94,0.25);
+  --red:          #ef4444;
+  --red-bg:       rgba(239,68,68,0.08);
+  --red-border:   rgba(239,68,68,0.25);
+  --yellow:        #f59e0b;
+  --yellow-bg:     rgba(245,158,11,0.08);
+  --yellow-border: rgba(245,158,11,0.25);
+  --r: 8px; --rl: 12px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+body {
+  font-family:'Syne',sans-serif;
+  background:var(--bg); color:var(--text);
+  min-height:100vh;
+}
+body::before {
+  content:''; position:fixed; inset:0;
+  background-image:radial-gradient(circle,rgba(232,93,4,0.055) 1px,transparent 1px);
+  background-size:32px 32px;
+  pointer-events:none; z-index:0;
+}
+.z { position:relative; z-index:1; }
+
+/* HEADER */
+header {
+  border-bottom:1px solid rgba(232,93,4,0.18);
+  padding:1.1rem 0;
+  position:sticky; top:0;
+  background:rgba(8,17,31,0.96);
+  backdrop-filter:blur(14px); z-index:200;
+}
+.hdr { max-width:1380px; margin:0 auto; padding:0 2rem; display:flex; align-items:center; justify-content:space-between; }
+.logo { display:flex; align-items:center; gap:10px; }
+.logo-box { width:34px; height:34px; background:var(--accent); border-radius:6px; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:12px; color:#fff; letter-spacing:-1px; }
+.logo-name { font-size:16px; font-weight:700; letter-spacing:-.3px; }
+.logo-name em { color:var(--accent); font-style:normal; }
+.hdr-tag { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text2); padding:3px 9px; border:1px solid var(--accent-border); border-radius:4px; letter-spacing:.5px; }
+
+/* CONTAINER */
+.wrap { max-width:1380px; margin:0 auto; padding:0 2rem 4rem; }
+
+/* STEPS HEADER */
+.steps-bar {
+  display:flex; align-items:stretch; gap:0;
+  border:1px solid var(--bg4); border-radius:var(--rl);
+  overflow:hidden; margin:2rem 0 1.5rem;
+}
+.step {
+  flex:1; padding:.85rem 1.2rem;
+  display:flex; align-items:center; gap:10px;
+  background:var(--bg3); border-right:1px solid var(--bg4);
+  transition:background .2s;
+}
+.step:last-child { border-right:none; }
+.step.active { background:var(--accent-dim); }
+.step.done { background:rgba(34,197,94,0.07); }
+.step-num {
+  width:26px; height:26px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700;
+  background:var(--bg4); color:var(--text3); flex-shrink:0;
+  transition:all .2s;
+}
+.step.active .step-num { background:var(--accent); color:#fff; }
+.step.done .step-num { background:var(--green); color:#fff; }
+.step-info {}
+.step-title { font-size:13px; font-weight:700; color:var(--text2); }
+.step.active .step-title { color:var(--accent); }
+.step.done .step-title { color:var(--green); }
+.step-sub { font-size:11px; color:var(--text3); margin-top:1px; }
+
+/* PANELS */
+.panel { display:none; }
+.panel.on { display:block; }
+
+/* SECTION TITLE */
+.sec-title { font-size:20px; font-weight:800; letter-spacing:-.4px; margin-bottom:4px; }
+.sec-title em { color:var(--accent); font-style:normal; }
+.sec-sub { font-size:13px; color:var(--text2); margin-bottom:1.5rem; line-height:1.6; }
+
+/* CARDS */
+.cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:1.5rem; }
+.card { background:var(--bg3); border:1px solid var(--bg4); border-radius:var(--rl); padding:.9rem 1.1rem; position:relative; overflow:hidden; }
+.card::after { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--c,var(--accent)); }
+.card.g{--c:var(--green)} .card.r{--c:var(--red)} .card.y{--c:var(--yellow)}
+.card-lbl { font-size:10px; color:var(--text3); font-family:'JetBrains Mono',monospace; letter-spacing:1px; text-transform:uppercase; margin-bottom:7px; }
+.card-val { font-size:28px; font-weight:800; font-family:'JetBrains Mono',monospace; line-height:1; }
+.card-val.g{color:var(--green)} .card-val.r{color:var(--red)} .card-val.y{color:var(--yellow)}
+.card-hint { font-size:10px; color:var(--text3); margin-top:4px; }
+
+/* CTO BADGE */
+.cto-badge { display:inline-flex; align-items:center; gap:6px; padding:3px 11px; border-radius:20px; font-size:11px; font-weight:600; font-family:'JetBrains Mono',monospace; letter-spacing:.4px; margin-bottom:1rem; }
+.cto-badge.p8  { background:rgba(59,130,246,.12); color:#60a5fa; border:1px solid rgba(59,130,246,.28); }
+.cto-badge.p16 { background:rgba(168,85,247,.12); color:#c084fc; border:1px solid rgba(168,85,247,.28); }
+.cto-badge .dot { width:5px; height:5px; border-radius:50%; background:currentColor; }
+
+/* INPUT / TEXTAREA */
+.lbl { font-size:11px; font-weight:700; color:var(--accent); letter-spacing:1px; text-transform:uppercase; display:flex; align-items:center; justify-content:space-between; margin-bottom:7px; }
+.live-ct { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text3); padding:2px 7px; background:var(--bg3); border:1px solid var(--bg4); border-radius:4px; transition:color .18s,border-color .18s; }
+.live-ct.on { color:var(--accent); border-color:var(--accent-border); }
+textarea, .fake-ta {
+  width:100%; background:var(--bg3); border:1px solid var(--bg4); border-radius:var(--rl);
+  color:var(--text); font-family:'JetBrains Mono',monospace; font-size:12.5px; line-height:1.75;
+  padding:.9rem 1.1rem; resize:vertical; transition:border-color .18s,box-shadow .18s; outline:none;
+}
+textarea::placeholder { color:var(--text3); }
+textarea:focus { border-color:var(--accent-border); box-shadow:0 0 0 3px var(--accent-dim); }
+
+/* BUTTONS */
+.row { display:flex; gap:8px; flex-wrap:wrap; margin-top:.9rem; }
+.btn { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; padding:9px 20px; border-radius:var(--r); border:none; cursor:pointer; transition:all .14s; display:flex; align-items:center; gap:7px; text-decoration:none; }
+.btn-p { background:var(--accent); color:#fff; }
+.btn-p:hover { background:var(--accent2); transform:translateY(-1px); }
+.btn-s { background:var(--bg3); color:var(--text2); border:1px solid var(--bg4); }
+.btn-s:hover { border-color:var(--accent-border); color:var(--text); }
+.btn-g { background:var(--green-bg); color:var(--green); border:1px solid var(--green-border); }
+.btn-g:hover { background:rgba(34,197,94,.14); }
+.btn-y { background:var(--yellow-bg); color:var(--yellow); border:1px solid var(--yellow-border); }
+.btn-y:hover { background:rgba(245,158,11,.14); }
+
+/* LOADING */
+.loader { height:2px; background:var(--bg4); border-radius:2px; overflow:hidden; margin:.9rem 0; display:none; }
+.loader.on { display:block; }
+.loader-fill { height:100%; width:55%; background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent)); background-size:200%; animation:load 1s linear infinite; }
+@keyframes load { 0%{background-position:0%;margin-left:-55%} 100%{background-position:200%;margin-left:100%} }
+
+/* ALERT / INFO BOX */
+.info-box {
+  padding:1rem 1.2rem; border-radius:var(--rl); margin-bottom:1.2rem;
+  font-size:13px; line-height:1.7; display:none;
+}
+.info-box.on { display:block; }
+.info-box.orange { background:var(--accent-dim); border:1px solid var(--accent-border); color:var(--text); }
+.info-box.warn   { background:var(--yellow-bg);  border:1px solid var(--yellow-border); color:var(--yellow); }
+.info-box.green  { background:var(--green-bg);   border:1px solid var(--green-border);  color:var(--green); }
+.info-box strong { font-weight:700; }
+.info-box .step-tag {
+  display:inline-block; background:var(--accent); color:#fff;
+  font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700;
+  padding:1px 6px; border-radius:4px; margin-right:4px;
+}
+
+/* RESULT SECTIONS */
+.results-wrap { margin-top:1.75rem; display:flex; flex-direction:column; gap:1.5rem; }
+.result-section { border:1px solid var(--bg4); border-radius:var(--rl); overflow:hidden; }
+.result-section.s-green { border-color:var(--green-border); }
+.result-section.s-red   { border-color:var(--red-border); }
+.rs-hdr { padding:.75rem 1.1rem; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--bg4); }
+.s-green .rs-hdr { background:rgba(34,197,94,0.07); border-bottom-color:var(--green-border); }
+.s-red   .rs-hdr { background:rgba(239,68,68,0.07);  border-bottom-color:var(--red-border); }
+.rs-title { font-size:12px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; font-family:'JetBrains Mono',monospace; display:flex; align-items:center; gap:8px; }
+.s-green .rs-title { color:var(--green); }
+.s-red   .rs-title { color:var(--red); }
+.copy-btn { font-family:'JetBrains Mono',monospace; font-size:11px; background:var(--bg3); border:1px solid var(--accent-border); color:var(--accent); border-radius:5px; padding:4px 10px; cursor:pointer; transition:background .14s; }
+.copy-btn:hover { background:var(--accent-dim); }
+
+/* TABLE */
+.tbl-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; }
+th { background:var(--bg3); color:var(--text3); font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:500; letter-spacing:1px; text-transform:uppercase; padding:9px 14px; text-align:left; border-bottom:1px solid var(--bg4); white-space:nowrap; }
+td { padding:10px 14px; font-size:13px; border-bottom:1px solid rgba(255,255,255,0.03); vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:rgba(255,255,255,0.02); }
+.num-anilha { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13px; }
+.num-anilha-wrap { display:flex; flex-direction:column; gap:2px; }
+.num-anilha-old  { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13px; color:var(--text); }
+.num-anilha-new  { font-family:'JetBrains Mono',monospace; font-size:11px; color:#c084fc; }
+/* Linha com legado tem fundo lilás suave */
+tr.row-legacy td { background:rgba(192,132,252,0.06); }
+tr.row-legacy:hover td { background:rgba(192,132,252,0.1); }
+.nome-cliente { font-weight:600; }
+.addr-text { font-size:12px; color:var(--text2); }
+.addr-num { font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--accent2); font-size:14px; }
+.pill { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:700; font-family:'JetBrains Mono',monospace; letter-spacing:.4px; text-transform:uppercase; white-space:nowrap; }
+.pill-g { background:var(--green-bg); color:var(--green); border:1px solid var(--green-border); }
+.pill-r { background:var(--red-bg);   color:var(--red);   border:1px solid var(--red-border); }
+.pill-y { background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-border); }
+.pill .dot { width:4px; height:4px; border-radius:50%; background:currentColor; }
+.ctag { font-family:'JetBrains Mono',monospace; font-size:10px; padding:2px 6px; border-radius:4px; display:inline-block; width:fit-content; }
+.ctag-new { background:rgba(59,130,246,.12); color:#7eb8f7; border:1px solid rgba(59,130,246,.2); }
+.ctag-leg { background:rgba(168,85,247,.12); color:#c084fc; border:1px solid rgba(168,85,247,.2); }
+.contract-tags { display:flex; flex-direction:column; gap:4px; }
+
+/* VALIDATION */
+.val-grid { display:flex; flex-direction:column; gap:9px; }
+.vcard { background:var(--bg3); border:1px solid var(--bg4); border-radius:var(--rl); padding:.9rem 1.2rem; display:grid; grid-template-columns:80px 1fr 1.4fr 160px 130px; align-items:center; gap:14px; transition:border-color .18s; animation:fadeUp .25s ease forwards; opacity:0; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.vcard.ok  { border-color:var(--green-border); background:var(--green-bg); }
+.vcard.bad { border-color:var(--red-border);   background:var(--red-bg); }
+.vcard.unk { border-color:var(--yellow-border); background:var(--yellow-bg); }
+.vc-num { font-family:'JetBrains Mono',monospace; font-size:15px; font-weight:700; }
+.vc-name { font-size:13px; font-weight:600; }
+.vc-addr { font-size:11.5px; color:var(--text2); }
+.vc-addr .hn { font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--accent2); }
+.vc-inp-wrap { display:flex; flex-direction:column; gap:3px; }
+.vc-inp-lbl { font-size:9px; color:var(--text3); letter-spacing:.5px; text-transform:uppercase; font-family:'JetBrains Mono',monospace; }
+.vc-inp { background:var(--bg2); border:1px solid var(--bg4); border-radius:6px; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700; padding:5px 9px; width:100%; outline:none; text-align:center; transition:border-color .18s,box-shadow .18s; }
+.vc-inp::placeholder { color:var(--text3); font-weight:400; }
+.vc-inp:focus { border-color:var(--accent-border); box-shadow:0 0 0 2px var(--accent-dim); }
+.vc-res { font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; text-align:center; white-space:pre-line; line-height:1.4; }
+.vc-res.ok{color:var(--green)} .vc-res.bad{color:var(--red)} .vc-res.unk{color:var(--yellow)} .vc-res.pend{color:var(--text3)}
+
+/* ANILHAS ENVIADAS — painel de referência no passo 2 */
+.anilhas-ref {
+  background:var(--bg3); border:1px solid var(--accent-border);
+  border-radius:var(--rl); padding:1rem 1.2rem;
+  margin-bottom:1.2rem;
+}
+.anilhas-ref-title {
+  font-size:11px; font-weight:700; color:var(--accent);
+  letter-spacing:1px; text-transform:uppercase;
+  font-family:'JetBrains Mono',monospace;
+  margin-bottom:.75rem;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.anilhas-ref-grid {
+  display:flex; flex-wrap:wrap; gap:6px;
+}
+.anilha-chip {
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px; font-weight:700;
+  background:var(--bg4); color:var(--text);
+  border:1px solid var(--bg5);
+  border-radius:6px; padding:4px 11px;
+  transition:border-color .15s, background .15s;
+  display:inline-flex; align-items:center; gap:5px;
+}
+/* Verde: encontrada + compatível direto */
+.anilha-chip.found {
+  background:rgba(34,197,94,0.1);
+  border-color:rgba(34,197,94,0.3);
+  color:#22c55e;
+}
+/* Vermelho: encontrada + todos cancelados */
+.anilha-chip.found-cancel {
+  background:rgba(239,68,68,0.1);
+  border-color:rgba(239,68,68,0.3);
+  color:#ef4444;
+}
+/* Roxo: encontrada via zeros ou legado */
+.anilha-chip.found-legacy {
+  background:rgba(192,132,252,0.1);
+  border-color:rgba(192,132,252,0.35);
+  color:#c084fc;
+  padding:4px 10px;
+}
+.anilha-chip.found-legacy .chip-old { color:#e8f0fe; font-weight:700; }
+.anilha-chip.found-legacy .chip-arr { color:#8b5cf6; font-size:11px; }
+.anilha-chip.found-legacy .chip-new { color:#c084fc; font-size:11px; }
+/* Cinza: não encontrada */
+.anilha-chip.missing {
+  background:rgba(77,107,138,0.1);
+  border-color:rgba(77,107,138,0.3);
+  color:#4d6b8a;
+  opacity:.8;
+}
+
+/* EMPTY */
+.empty { text-align:center; padding:3.5rem 2rem; color:var(--text3); }
+.empty-ico { font-size:40px; opacity:.35; margin-bottom:.8rem; }
+.empty-tit { font-size:15px; font-weight:700; color:var(--text2); margin-bottom:5px; }
+.empty-sub { font-size:12px; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px} ::-webkit-scrollbar-track{background:var(--bg)} ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px} ::-webkit-scrollbar-thumb:hover{background:var(--bg5)}
+
+footer { border-top:1px solid var(--bg3); padding:1.2rem 0; text-align:center; font-size:11px; color:var(--text3); font-family:'JetBrains Mono',monospace; letter-spacing:.5px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr">
+    <div class="logo">
+      <div class="logo-box">CTO</div>
+      <div class="logo-name"><em>Validador</em> de Anilhas</div>
+    </div>
+    <div class="hdr-tag">INTERNETWAY · INTERNO</div>
+  </div>
+</header>
+
+<div class="wrap z">
+
+  <!-- STEPS BAR -->
+  <div class="steps-bar">
+    <div class="step active" id="step1">
+      <div class="step-num">1</div>
+      <div class="step-info">
+        <div class="step-title">Inserir Anilhas</div>
+        <div class="step-sub">Cole os números</div>
+      </div>
+    </div>
+    <div class="step" id="step2">
+      <div class="step-num">2</div>
+      <div class="step-info">
+        <div class="step-title">Consultar sinais.php</div>
+        <div class="step-sub">Abrir e copiar resultado</div>
+      </div>
+    </div>
+    <div class="step" id="step3">
+      <div class="step-num">3</div>
+      <div class="step-info">
+        <div class="step-title">Colar Resultado</div>
+        <div class="step-sub">Sistema processa tudo</div>
+      </div>
+    </div>
+    <div class="step" id="step4">
+      <div class="step-num">4</div>
+      <div class="step-info">
+        <div class="step-title">Validar Endereços</div>
+        <div class="step-sub">Confirmar com técnico</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAINEL 1: INSERIR ANILHAS ══ -->
+  <div class="panel on" id="panel1">
+    <div class="sec-title">Inserir <em>Anilhas</em></div>
+    <div class="sec-sub">Cole os números das anilhas enviados pelo técnico — um por linha ou separados por vírgula/espaço.</div>
+
+    <div class="lbl">
+      Números das Anilhas
+      <span class="live-ct" id="live-ct1">0 anilhas</span>
+    </div>
+    <textarea id="input-anilhas" rows="8"
+      placeholder="Cole os números das anilhas aqui. Exemplos aceitos:
+
+35380
+88515
+124245
+44198
+
+ou: 35380, 88515, 124245, 44198"
+      oninput="contarAnilhas()"></textarea>
+
+    <div class="row">
+      <button class="btn btn-p" onclick="abrirSinais()">⚡ Consultar no sinais.php</button>
+      <button class="btn btn-s" onclick="limparTudo()">✕ Limpar</button>
+    </div>
+
+    <div class="info-box orange on" id="info-instrucao" style="margin-top:1.2rem">
+      <strong>Como funciona:</strong><br>
+      <span class="step-tag">1</span> Cole os números das anilhas acima e clique em <strong>Consultar no sinais.php</strong><br>
+      <span class="step-tag">2</span> Na aba do sinais.php, clique em <strong>Consultar</strong> para ver os resultados<br>
+      <span class="step-tag">3</span> Clique no favorito <strong>⚡ Enviar para Validador</strong> na barra do Chrome<br>
+      <span class="step-tag">4</span> O resultado volta automaticamente aqui e é processado na hora<br><br>
+      <strong>Primeira vez?</strong> Arraste o botão abaixo para a barra de favoritos do Chrome:<br>
+      <div style="margin-top:.6rem">
+        <a id="bookmarklet-link" href="#" onclick="return false;"
+          style="display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#fff;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;padding:6px 14px;border-radius:6px;text-decoration:none;cursor:grab;user-select:none;">
+          ⚡ Enviar para Validador
+        </a>
+        <span style="font-size:11px;color:var(--text2);margin-left:10px;">← arraste este botão para a barra de favoritos</span>
+      </div>
+    </div>
+
+    <div class="info-box warn" id="info-vazio">
+      ⚠ Nenhum número de anilha encontrado. Verifique o que foi colado.
+    </div>
+  </div>
+
+  <!-- ══ PAINEL 2: COLAR RESULTADO ══ -->
+  <div class="panel" id="panel2">
+    <div class="sec-title">Colar <em>Resultado</em></div>
+    <div class="sec-sub">
+      O sinais.php foi aberto em nova aba. Consulte as anilhas lá, selecione toda a tabela de resultado, copie e cole aqui abaixo.
+    </div>
+
+    <div class="info-box orange on">
+      <strong>No sinais.php (outra aba):</strong><br>
+      <span class="step-tag">1</span> As anilhas já estão preenchidas — clique em <strong>Consultar</strong><br>
+      <span class="step-tag">2</span> Quando aparecer a tabela, clique no favorito <strong>⚡ Enviar para Validador</strong> na barra do Chrome<br>
+      <span class="step-tag">3</span> O resultado volta automaticamente aqui e é processado!<br><br>
+      <span style="color:var(--text3);font-size:12px;">Sem o favorito instalado? Selecione a tabela, copie (Ctrl+C) e cole manualmente no campo abaixo.</span>
+    </div>
+
+    <!-- ANILHAS ENVIADAS PARA REFERÊNCIA -->
+    <div class="anilhas-ref">
+      <div class="anilhas-ref-title">
+        <span>Anilhas enviadas para consulta</span>
+        <span id="ref-status" style="font-size:10px;color:var(--text3);font-weight:400;">cole o resultado para comparar</span>
+      </div>
+      <div class="anilhas-ref-grid" id="anilhas-ref-grid"></div>
+    </div>
+
+    <div class="lbl">Resultado copiado do sinais.php</div>
+    <textarea id="input-resultado" rows="10"
+      placeholder="Cole aqui o resultado copiado da tabela do sinais.php...
+
+O sistema vai identificar automaticamente:
+• Contratos compatíveis (pelo menos 1 ativo)
+• Contratos cancelados
+• Contratos migrados (L-hemp)
+• Número da casa de cada endereço"
+      oninput="contarResultado()"></textarea>
+
+    <div class="row">
+      <button class="btn btn-p" onclick="processarResultado()">⚡ Processar Resultado</button>
+      <button class="btn btn-s" onclick="voltarPasso1()">← Voltar</button>
+    </div>
+
+    <div class="loader" id="loader"><div class="loader-fill"></div></div>
+    <div class="info-box warn" id="info-resultado-vazio">⚠ Nenhuma anilha válida encontrada no resultado. Verifique se copiou a tabela completa.</div>
+  </div>
+
+  <!-- ══ PAINEL 3: RESULTADO PROCESSADO ══ -->
+  <div class="panel" id="panel3">
+    <div class="sec-title">Resultado <em>Processado</em></div>
+    <div class="sec-sub">Análise automática completa. Contratos compatíveis com número da casa extraído.</div>
+
+    <div class="cards" id="cards-resumo">
+      <div class="card">
+        <div class="card-lbl">Total</div>
+        <div class="card-val" id="c-total">0</div>
+        <div class="card-hint" id="c-cto">—</div>
+      </div>
+      <div class="card g">
+        <div class="card-lbl">Compatíveis</div>
+        <div class="card-val g" id="c-compat">0</div>
+        <div class="card-hint">pelo menos 1 ativo</div>
+      </div>
+      <div class="card r">
+        <div class="card-lbl">Cancelados</div>
+        <div class="card-val r" id="c-cancel">0</div>
+        <div class="card-hint">todos cancelados</div>
+      </div>
+      <div class="card" style="--c:#c084fc">
+        <div class="card-lbl" style="color:#c084fc">Via Legado</div>
+        <div class="card-val" id="c-leg" style="color:#c084fc">0</div>
+        <div class="card-hint">encontradas pelo L-hemp</div>
+      </div>
+    </div>
+
+    <div id="cto-badge-area" style="margin-bottom:1rem;"></div>
+
+    <!-- CHIPS DE ANILHAS ENVIADAS VS ENCONTRADAS -->
+    <div class="anilhas-ref" id="ref-resultado" style="display:none; margin-bottom:1.5rem">
+      <div class="anilhas-ref-title">
+        <span>Anilhas enviadas vs encontradas</span>
+        <span id="ref-resultado-status" style="font-size:10px;color:var(--text3);font-weight:400;"></span>
+      </div>
+      <div class="anilhas-ref-grid" id="ref-resultado-grid"></div>
+    </div>
+
+    <div class="row" style="margin-bottom:1.5rem">
+      <button class="btn btn-g" onclick="irValidacao()">→ Validar Endereços com Técnico</button>
+      <button class="btn btn-y" id="btn-copy-rel" onclick="copiarRelatorio()">⧉ Copiar Relatório</button>
+      <button class="btn btn-s" onclick="novaConsulta()">↺ Nova Consulta</button>
+    </div>
+
+    <div id="results-area"></div>
+  </div>
+
+  <!-- ══ PAINEL 4: VALIDAÇÃO ══ -->
+  <div class="panel" id="panel4">
+    <div class="sec-title">Validação de <em>Endereço</em></div>
+    <div class="sec-sub">Apenas anilhas compatíveis. Digite o número da casa informado pelo técnico e compare com o cadastro.</div>
+
+    <div class="cards">
+      <div class="card g"><div class="card-lbl">Conferem</div><div class="card-val g" id="vc-ok">—</div><div class="card-hint">números batem</div></div>
+      <div class="card r"><div class="card-lbl">Divergem</div><div class="card-val r" id="vc-bad">—</div><div class="card-hint">números diferentes</div></div>
+      <div class="card y"><div class="card-lbl">Sem número</div><div class="card-val y" id="vc-unk">—</div><div class="card-hint">não identificado</div></div>
+      <div class="card"><div class="card-lbl">Pendentes</div><div class="card-val" id="vc-pend">—</div><div class="card-hint">aguardando</div></div>
+    </div>
+
+    <div class="row" style="margin-bottom:1.2rem">
+      <button class="btn btn-p" onclick="validarTodos()">⚡ Validar Todos</button>
+      <button class="btn btn-s" onclick="limparVal()">↺ Limpar Validações</button>
+      <button class="btn btn-s" onclick="voltarResultado()">← Ver Resultado</button>
+    </div>
+
+    <div class="val-grid" id="val-grid"></div>
+  </div>
+
+</div><!-- /wrap -->
+
+<footer>
+  <div style="max-width:1380px;margin:0 auto;padding:0 2rem">
+    SISTEMA INTERNO · INTERNETWAY · VALIDADOR DE ANILHAS CTO · v2.1
+  </div>
+</footer>
+
+<script>
+// ─── ESTADO ───────────────────────────────────────────────
+let anilhas = [];
+let anilhasInput = [];
+let mapaBusca = new Map(); // n → resultado de buscarAnilha
+
+// ─── UTILITÁRIOS ──────────────────────────────────────────
+function isLegado(desc) {
+  if (!desc) return false;
+  return /\(l-hemp/i.test(desc);
+}
+
+// Verifica se é um legado DIFERENTE do contrato atual
+// Ex: anilha "0061936", legado tem "61936" dentro → mesmo contrato, NÃO é legado diferente
+// Ex: anilha "0060222", legado tem "15306" dentro → contrato diferente, É legado diferente
+function isLegadoDiferente(numAnilha, desc) {
+  if (!isLegado(desc)) return false;
+  const numLeg = numDoLegado(desc);
+  if (!numLeg) return false;
+  // Compara sem zeros: se forem iguais, é o mesmo contrato
+  return norm(numLeg) !== norm(numAnilha);
+}
+
+// Extrai o número antigo de dentro da descrição do legado
+// Ex: "Contrato Nº 15306 (L-hemp00313-15306)" → "15306"
+function extrairNumLegado(desc) {
+  const m = desc.match(/n[°º\.:]?\s*(\d+)\s*\(/i);
+  return m ? m[1] : null;
+}
+function isCancelado(status) {
+  return /cancelado/i.test(status);
+}
+function extrairNome(desc) {
+  const partes = desc.split(/\s+-\s+/);
+  for (let i = partes.length - 1; i >= 0; i--) {
+    const p = partes[i].trim();
+    if (!p) continue;
+    if (/^contrato\s+(n[°º]\s*)?\d+/i.test(p)) continue;
+    if (/^contratos\s+pf/i.test(p)) continue;
+    if (/^mensal/i.test(p)) continue;
+    if (/^vds_/i.test(p)) continue;
+    if (/^aceite\s+digital/i.test(p)) continue;
+    if (/^\[.*\]/i.test(p)) continue;
+    if (/^carn[eê]/i.test(p)) continue;
+    return p;
+  }
+  return desc.substring(0, 50);
+}
+function extrairNumeroCasa(end) {
+  if (!end) return null;
+  let m = end.match(/,\s*(\d{1,6})/);
+  if (m) return m[1];
+  m = end.match(/\b(\d{1,5})\b/);
+  if (m) return m[1];
+  return null;
+}
+function setStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('step' + i);
+    el.classList.remove('active', 'done');
+    if (i < n)  el.classList.add('done');
+    if (i === n) el.classList.add('active');
+  }
+}
+function showPanel(n) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  document.getElementById('panel' + n).classList.add('on');
+  setStep(n);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ─── PASSO 1: CONTAR ANILHAS ──────────────────────────────
+function contarAnilhas() {
+  const txt = document.getElementById('input-anilhas').value;
+  const nums = extrairNumerosAnilhas(txt);
+  const el = document.getElementById('live-ct1');
+  el.textContent = nums.length + (nums.length === 1 ? ' anilha' : ' anilhas');
+  el.className = 'live-ct' + (nums.length > 0 ? ' on' : '');
+}
+
+function extrairNumerosAnilhas(txt) {
+  // Aceita: um por linha, separados por vírgula, espaço, ponto-vírgula
+  // Aceita números de 4 a 10 dígitos (cobre tanto "6974" quanto "0061936")
+  return txt.split(/[\n,;\s]+/).map(s => s.replace(/\D/g,'').trim()).filter(s => s.length >= 4 && s.length <= 10);
+}
+
+// ─── PASSO 1 → ABRIR SINAIS.PHP ───────────────────────────
+function abrirSinais() {
+  const txt = document.getElementById('input-anilhas').value.trim();
+  const nums = extrairNumerosAnilhas(txt);
+
+  if (!nums.length) {
+    document.getElementById('info-vazio').classList.add('on');
+    return;
+  }
+  document.getElementById('info-vazio').classList.remove('on');
+
+  anilhasInput = nums;
+
+  // Popula os chips de referência no passo 2
+  const grid = document.getElementById('anilhas-ref-grid');
+  grid.innerHTML = '';
+  nums.forEach(n => {
+    const chip = document.createElement('span');
+    chip.className = 'anilha-chip';
+    chip.id = `chip-${n}`;
+    chip.textContent = n;
+    grid.appendChild(chip);
+  });
+  document.getElementById('ref-status').textContent = `${nums.length} anilha${nums.length!==1?'s':''} — consultando...`;
+
+  // Tenta usar o proxy local (servidor Python)
+  // Se não tiver servidor, abre o sinais.php em nova aba (modo manual)
+  // URL relativa — funciona tanto local quanto no Railway
+  const PROXY = '/proxy/buscar';
+
+  fetch(PROXY, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ anilhas: nums })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok && data.dados) {
+      // Proxy funcionou — processa direto!
+      consultarComZerosSeNecessario(data.dados, nums);
+    } else {
+      mostrarErroProxy(data.erro || 'Erro desconhecido');
+      modoManual(nums);
+    }
+  })
+  .catch(() => {
+    // Servidor não está rodando — modo manual
+    modoManual(nums);
+  });
+
+  showPanel(2);
+}
+
+// ─── CONSULTA VIA PROXY COM RE-TENTATIVA DE ZEROS ──────────
+async function consultarComZerosSeNecessario(dadosPrimeiros, numsOriginais) {
+  const retornados = extrairNumerosDoTexto(dadosPrimeiros);
+  const faltantes = numsOriginais.filter(n => !foiRetornado(n, retornados, dadosPrimeiros));
+
+  document.getElementById('ref-status').textContent =
+    faltantes.length === 0
+      ? `✓ todas as ${numsOriginais.length} anilhas encontradas`
+      : `${numsOriginais.length - faltantes.length} encontradas · tentando ${faltantes.length} com 00...`;
+
+  if (faltantes.length === 0) {
+    // Tudo encontrado na primeira tentativa
+    aplicarDadosRecebidos(dadosPrimeiros);
+    return;
+  }
+
+  // Segunda tentativa com 00 nas faltantes
+  const comZero = faltantes.map(n => '00' + n);
+  try {
+    const r2 = await fetch('/proxy/buscar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ anilhas: comZero })
+    });
+    const data2 = await r2.json();
+    const dadosFinais = data2.ok && data2.dados
+      ? dadosPrimeiros + '\n' + data2.dados
+      : dadosPrimeiros;
+
+    document.getElementById('ref-status').textContent =
+      `✓ processamento completo`;
+    aplicarDadosRecebidos(dadosFinais);
+  } catch {
+    aplicarDadosRecebidos(dadosPrimeiros);
+  }
+}
+
+function extrairNumerosDoTexto(txt) {
+  const nums = new Set();
+  for (const linha of txt.split('\n')) {
+    const cols = linha.split('\t');
+    if (cols.length < 3) continue;
+    const num = cols[0].replace(/\D/g, '').trim();
+    if (num.length >= 4) nums.add(num);
+  }
+  return nums;
+}
+
+function foiRetornado(n, retornados, textoCompleto) {
+  const nL = norm(n);
+  // 1. Direto
+  if (retornados.has(n)) return true;
+  // 2. Normalizado
+  for (const r of retornados) { if (norm(r) === nL) return true; }
+  // 3. Dentro da descrição L-hemp — só quando número legado ≠ número do sistema
+  for (const linha of textoCompleto.split('\n')) {
+    if (/l-hemp/i.test(linha)) {
+      const cols = linha.split('\t');
+      const numSist = (cols[0] || '').replace(/\D/g,'');
+      const desc = cols[1] || linha;
+      const numLeg = numDoLegado(desc);
+      if (numLeg && norm(numLeg) === nL && norm(numLeg) !== norm(numSist)) return true;
+    }
+  }
+  return false;
+}
+
+function mostrarErroProxy(msg) {
+  console.warn('Proxy:', msg);
+}
+
+// ─── MODO MANUAL: abre sinais.php em nova aba ──────────────
+function modoManual(nums) {
+  document.getElementById('ref-status').textContent =
+    `${nums.length} anilha${nums.length!==1?'s':''} — cole o resultado para comparar`;
+
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = 'http://intraweb.internetway.com.br/ctos/buscacontratos.php';
+  form.target = '_blank';
+  const ta = document.createElement('textarea');
+  ta.name = 'anilhas';
+  ta.value = nums.join('\n');
+  form.appendChild(ta);
+  document.body.appendChild(form);
+
+  if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+    try {
+      chrome.runtime.sendMessage({ action: 'SALVAR_ANILHAS', payload: nums }, () => {});
+    } catch(e) {}
+  }
+
+  form.submit();
+  document.body.removeChild(form);
+}
+
+// ─── PASSO 2: CRUZAR ANILHAS EM TEMPO REAL ───────────────
+function contarResultado() {
+  const txt = document.getElementById('input-resultado').value;
+  if (!txt.trim() || !anilhasInput.length) return;
+
+  const linhas = txt.split('\n').filter(l => l.trim());
+
+  let achou = 0;
+  anilhasInput.forEach(n => {
+    const chip = document.getElementById(`chip-${n}`);
+    if (!chip) return;
+    const res = buscarAnilhaNoTexto(n, linhas); // agora retorna {achado, via, numSistema} ou false
+    if (res) {
+      if (res.via === 'zeros' || res.via === 'legado') {
+        chip.className = 'anilha-chip found-legacy';
+        chip.innerHTML = `<span class="chip-old">${n}</span><span class="chip-arr">→</span><span class="chip-new">${res.numSistema}</span>`;
+      } else {
+        chip.className = 'anilha-chip found';
+        chip.textContent = n;
+      }
+      achou++;
+    } else {
+      chip.className = 'anilha-chip missing';
+      chip.textContent = n;
+    }
+  });
+
+  const faltando = anilhasInput.length - achou;
+  const st = document.getElementById('ref-status');
+  if (faltando === 0) {
+    st.textContent = `✓ todas as ${anilhasInput.length} anilhas encontradas`;
+    st.style.color = 'var(--green)';
+  } else {
+    st.textContent = `${achou} encontradas · ${faltando} não encontradas`;
+    st.style.color = 'var(--yellow)';
+  }
+}
+
+// ─── PASSO 2 → PROCESSAR ──────────────────────────────────
+function processarResultado() {
+  const txt = document.getElementById('input-resultado').value.trim();
+  if (!txt) {
+    document.getElementById('info-resultado-vazio').classList.add('on');
+    return;
+  }
+  document.getElementById('info-resultado-vazio').classList.remove('on');
+
+  const loader = document.getElementById('loader');
+  loader.classList.add('on');
+
+  setTimeout(() => {
+    loader.classList.remove('on');
+    anilhas = parsearTexto(txt);
+
+    if (!anilhas.length) {
+      document.getElementById('info-resultado-vazio').classList.add('on');
+      return;
+    }
+
+    renderResultado();
+    showPanel(3);
+  }, 500);
+}
+
+// ─── PARSER ───────────────────────────────────────────────
+function parsearTexto(texto) {
+  const linhas = texto.split('\n');
+  const mapa = new Map();
+
+  for (let linha of linhas) {
+    linha = linha.trim();
+    if (!linha) continue;
+
+    let cols = linha.split('\t').map(c => c.trim()).filter(Boolean);
+    if (cols.length < 3) cols = linha.split(/  +/).map(c => c.trim()).filter(Boolean);
+    if (cols.length < 3) continue;
+
+    let statusIdx = -1;
+    for (let i = 0; i < cols.length; i++) {
+      if (/^(normal|cancelado|encerrado|bloqueio|inadimplente|suspenso|inativo)/i.test(cols[i])) {
+        statusIdx = i; break;
+      }
+    }
+    if (statusIdx === -1 && cols.length >= 4) statusIdx = 2;
+    if (statusIdx === -1) continue;
+
+    const numRaw    = cols[0].replace(/\D/g,'').trim();
+    if (!numRaw || numRaw.length < 4) continue;
+    const descricao = cols.slice(1, statusIdx).join(' ').trim();
+    const status    = cols[statusIdx].trim();
+    const endereco  = cols.slice(statusIdx + 1).join(' ').trim();
+    // Só marca como legado se o número dentro do L-hemp for DIFERENTE do contrato atual
+    const legado    = isLegadoDiferente(numRaw, descricao);
+    const cancelado = isCancelado(status);
+    const nome      = extrairNome(descricao);
+    const numCasa   = extrairNumeroCasa(endereco);
+
+    if (!mapa.has(numRaw)) {
+      mapa.set(numRaw, { anilha:numRaw, contratos:[], endereco, numCasa });
+    }
+    const entry = mapa.get(numRaw);
+    entry.contratos.push({ descricao, status, legado, cancelado, nome });
+    if (!legado && endereco) { entry.endereco = endereco; entry.numCasa = numCasa; }
+  }
+
+  return Array.from(mapa.values()).map(entry => {
+    const temAtivo     = entry.contratos.some(c => !c.cancelado);
+    const todoCancelado= entry.contratos.every(c => c.cancelado);
+    const temLegado    = entry.contratos.some(c => c.legado);
+    const ativo        = entry.contratos.find(c => !c.cancelado);
+    const nome         = ativo ? ativo.nome : entry.contratos[0].nome;
+    return { anilha:entry.anilha, nome, contratos:entry.contratos, endereco:entry.endereco, numCasa:entry.numCasa, compativel:temAtivo, todoCancelado, temLegado };
+  });
+}
+
+// ─── CRUZAR ANILHA COM RESULTADO (com zeros e legado) ─────
+// Retorna { anilha: objeto encontrado, via: 'direto'|'zeros'|'legado', numUsado } ou null
+// ─── BUSCA UNIFICADA DE ANILHA ───────────────────────────
+// Recebe o número que o técnico mandou (ex: "61936")
+// Tenta: 1) direto, 2) com zeros à frente, 3) dentro da descrição legado
+// ─── FUNÇÃO CENTRAL DE BUSCA ─────────────────────────────
+// Normaliza número removendo zeros à frente
+function norm(n) { return (n || '').replace(/^0+/, '') || n; }
+
+// Extrai número de dentro da descrição legado L-hemp
+// "Contrato Nº 15306 (L-hemp00313-15306)" → "15306"
+// "Contrato N° 58001 (L-hemp00313-8153)"  → "58001"
+function numDoLegado(descricao) {
+  if (!descricao) return null;
+
+  // O formato real que vem do sistema:
+  // "Contrato NÂº 60222 (L-hemp00313-15306) - Nome"
+  // O número ANTIGO está no CÓDIGO do L-hemp após o último hífen: "L-hemp00313-15306" → "15306"
+  
+  // Padrão 1: extrai número do código L-hemp: "L-hemp00313-15306" → "15306"
+  let m = descricao.match(/l-hemp\d+-([\d]+)/i);
+  if (m) return m[1];
+
+  // Padrão 2: número antes de "(L-hemp": "15306 (L-hemp..." → "15306"
+  m = descricao.match(/(\d{4,})\s*\(l-hemp/i);
+  if (m) return m[1];
+
+  // Padrão 3: "Nº XXXX" 
+  m = descricao.match(/n[°ºÂ\.\s]{0,5}(\d{4,})/i);
+  if (m) return m[1];
+
+  return null;
+}
+
+// Busca nos objetos anilha processados (pós-parser)
+function buscarAnilha(n, anilhasArr) {
+  const nL = norm(n);
+
+  // 1. Direto exato
+  let found = anilhasArr.find(a => a.anilha === n);
+  if (found) return { anilha: found, via: 'direto', numUsado: n };
+
+  // 2. Normalizado (sem zeros): "61936" bate com "0061936"
+  found = anilhasArr.find(a => norm(a.anilha) === nL);
+  if (found) {
+    return { anilha: found, via: found.anilha === n ? 'direto' : 'zeros', numUsado: found.anilha };
+  }
+
+  // 3. Dentro da descrição L-hemp — só quando for legado diferente do contrato atual
+  // Ex: técnico manda "15306", sistema tem "0060222" cuja descrição tem
+  // "Contrato Nº 15306 (L-hemp...)" → número legado 15306 ≠ anilha 0060222 → encontrou!
+  for (const a of anilhasArr) {
+    for (const c of a.contratos) {
+      if (!c.legado) continue;
+      const numLeg = numDoLegado(c.descricao);
+      if (numLeg && norm(numLeg) === nL) {
+        return { anilha: a, via: 'legado', numUsado: a.anilha, numLegado: numLeg };
+      }
+    }
+    // Também verifica contratos não marcados como legado mas que têm L-hemp
+    // (caso o isLegadoDiferente tenha filtrado)
+    for (const c of a.contratos) {
+      if (!isLegado(c.descricao)) continue;
+      const numLeg = numDoLegado(c.descricao);
+      if (numLeg && norm(numLeg) === nL && norm(numLeg) !== norm(a.anilha)) {
+        return { anilha: a, via: 'legado', numUsado: a.anilha, numLegado: numLeg };
+      }
+    }
+  }
+
+  return null;
+}
+
+// Busca no texto bruto TSV (passo 2, antes do parser)
+function buscarAnilhaNoTexto(n, linhas) {
+  const nL = norm(n);
+
+  for (const linha of linhas) {
+    const cols = linha.split('\t').map(c => c.trim()).filter(Boolean);
+    if (cols.length < 3) continue;
+    const numSistema = cols[0].replace(/\D/g, '').trim();
+    const descricao  = cols[1] || '';
+
+    // 1. Direto exato
+    if (numSistema === n) return { via: 'direto', numSistema };
+
+    // 2. Normalizado (zeros)
+    if (norm(numSistema) === nL) return { via: 'zeros', numSistema };
+
+    // 3. Dentro da descrição L-hemp — só quando número legado ≠ número do sistema
+    if (/l-hemp/i.test(descricao)) {
+      const numLeg = numDoLegado(descricao);
+      if (numLeg && norm(numLeg) === nL && norm(numLeg) !== norm(numSistema)) {
+        return { via: 'legado', numSistema, numLegado: numLeg };
+      }
+    }
+  }
+  return false;
+}
+
+// ─── RENDER RESULTADO ─────────────────────────────────────
+function renderResultado() {
+  const comp   = anilhas.filter(a => a.compativel);
+  const canc   = anilhas.filter(a => a.todoCancelado);
+  const comLeg = anilhas.filter(a => a.temLegado).length;
+
+  // Conta quantas foram encontradas via legado/zeros (não direto)
+  const viaLegado = anilhasInput.filter(n => {
+    const r = mapaBusca.get(n);
+    return r && (r.via === 'legado' || r.via === 'zeros');
+  }).length;
+
+  document.getElementById('c-total').textContent  = anilhas.length;
+  document.getElementById('c-compat').textContent = comp.length;
+  document.getElementById('c-cancel').textContent = canc.length;
+  document.getElementById('c-leg').textContent    = viaLegado || comLeg;
+  document.getElementById('c-cto').textContent    = anilhas.length <= 8 ? 'CTO padrão (8p)' : 'CTO ampliada (16p)';
+
+  const ba = document.getElementById('cto-badge-area');
+  const cls = anilhas.length <= 8 ? 'p8' : 'p16';
+  const lbl = anilhas.length <= 8 ? `CTO PADRÃO · ${anilhas.length}/8 portas` : `CTO AMPLIADA · ${anilhas.length}/16 portas`;
+  ba.innerHTML = `<span class="cto-badge ${cls}"><span class="dot"></span>${lbl}</span>`;
+
+  // Fallback: se ainda não tiver anilhasInput, usa os números do resultado sem zeros
+  if (anilhasInput.length === 0 && anilhas.length > 0) {
+    anilhasInput = anilhas.map(a => a.anilha.replace(/^0+/, '') || a.anilha);
+  }
+
+  // ── CHIPS DE ANILHAS ENVIADAS VS ENCONTRADAS ──
+  if (anilhasInput.length > 0) {
+    const refWrap  = document.getElementById('ref-resultado');
+    const refGrid  = document.getElementById('ref-resultado-grid');
+    const refSt    = document.getElementById('ref-resultado-status');
+    const encontradas = new Set(anilhas.map(a => a.anilha));
+
+    refGrid.innerHTML = '';
+    mapaBusca = new Map(); // reseta e reconstrói
+    let achou = 0;
+
+    anilhasInput.forEach(n => {
+      const chip = document.createElement('span');
+      const resultado = buscarAnilha(n, anilhas);
+      mapaBusca.set(n, resultado); // salva para reusar na tabela
+
+      if (resultado) {
+        const a = resultado.anilha;
+        const via = resultado.via;
+        const numSistema = resultado.numUsado;
+
+        if (via === 'zeros' || via === 'legado') {
+          // Roxo/Lilás: encontrado via zeros ou legado
+          chip.className = 'anilha-chip found-legacy';
+          // Mostra: número técnico → número sistema
+          chip.innerHTML = `<span class="chip-old">${n}</span><span class="chip-arr">→</span><span class="chip-new">${numSistema}</span>`;
+          const tipoVia = via === 'legado' ? 'via contrato L-hemp' : 'via zeros adicionados';
+          chip.title = `Encontrado ${tipoVia} (sistema: ${numSistema})`;
+        } else {
+          // Verde = compatível direto, Vermelho = cancelado direto
+          chip.className = a.compativel ? 'anilha-chip found' : 'anilha-chip found-cancel';
+          chip.textContent = n;
+        }
+        achou++;
+      } else {
+        chip.className = 'anilha-chip missing';
+        chip.textContent = n;
+      }
+      refGrid.appendChild(chip);
+    });
+
+    const faltando = anilhasInput.length - achou;
+    if (faltando === 0) {
+      refSt.textContent = `✓ todas as ${anilhasInput.length} encontradas`;
+      refSt.style.color = 'var(--green)';
+    } else {
+      refSt.textContent = `${achou} encontradas · ${faltando} não retornadas`;
+      refSt.style.color = 'var(--yellow)';
+    }
+
+    refWrap.style.display = 'block';
+  }
+
+  // Constrói a tabela DEPOIS dos chips para que mapaBusca esteja populado
+  const area = document.getElementById('results-area');
+  area.innerHTML = '';
+
+  if (comp.length)  area.appendChild(buildSection('s-green', `✓ COMPATÍVEIS — ${comp.length} anilha${comp.length!==1?'s':''}`, comp));
+  if (canc.length)  area.appendChild(buildSection('s-red',   `✗ TODOS CANCELADOS — ${canc.length} anilha${canc.length!==1?'s':''}`, canc));
+}
+
+function buildSection(cls, title, lista) {
+  const sec = document.createElement('div');
+  sec.className = `result-section ${cls}`;
+  const hdr = document.createElement('div');
+  hdr.className = 'rs-hdr';
+  hdr.innerHTML = `<span class="rs-title">${title}</span><button class="copy-btn" onclick="copiarSecao(this)">⧉ copiar</button>`;
+  sec.appendChild(hdr);
+  const wrap = document.createElement('div');
+  wrap.className = 'tbl-wrap';
+  wrap.appendChild(buildTable(lista));
+  sec.appendChild(wrap);
+  return sec;
+}
+
+function buildTable(lista) {
+  const tbl = document.createElement('table');
+  const thead = tbl.createTHead();
+  const hr = thead.insertRow();
+  ['Anilha','Cliente','Contratos','Status','Endereço','Nº Casa'].forEach(h => {
+    const th = document.createElement('th');
+    th.textContent = h;
+    hr.appendChild(th);
+  });
+  const tbody = tbl.createTBody();
+  for (const a of lista) {
+    const tr = tbody.insertRow();
+
+    // Busca no mapaBusca qual número do técnico corresponde a essa anilha
+    let numTecnico = null;
+    let viaIndireta = false;
+
+    for (const [n, r] of mapaBusca.entries()) {
+      if (r && r.anilha === a) {
+        numTecnico = n;
+        viaIndireta = r.via === 'zeros' || r.via === 'legado';
+        break;
+      }
+    }
+
+    // Fallback: se não achou no mapa, tenta comparar normalizando zeros
+    if (!numTecnico) {
+      const aLimpo = a.anilha.replace(/^0+/, '') || a.anilha;
+      numTecnico = anilhasInput.find(n => (n.replace(/^0+/,'') || n) === aLimpo);
+      if (numTecnico && numTecnico !== a.anilha) viaIndireta = true;
+    }
+
+    // Monta coluna Anilha mostrando número técnico e número sistema quando diferentes
+    // Casos:
+    // A) via zeros/legado pelo mapaBusca: mostra "técnico → sistema"
+    // B) tem contrato L-hemp mesmo sem ter sido buscado pelo técnico: mostra "sistema / L:antigo"
+    let celAnilha = '';
+
+    if (viaIndireta && numTecnico && numTecnico !== a.anilha) {
+      // Caso A: técnico mandou número diferente do sistema
+      celAnilha = `
+        <div class="num-anilha-wrap">
+          <span class="num-anilha-old">${numTecnico}</span>
+          <span class="num-anilha-new">→ ${a.anilha}</span>
+        </div>`;
+    } else {
+      // Verifica se tem contrato legado com número antigo na descrição
+      let numLegadoDesc = null;
+      for (const c of a.contratos) {
+        if (c.legado) {
+          numLegadoDesc = numDoLegado(c.descricao);
+          if (numLegadoDesc) break;
+        }
+      }
+
+      if (numLegadoDesc && norm(numLegadoDesc) !== norm(a.anilha)) {
+        // Caso B: tem L-hemp com número antigo DIFERENTE → mostra os dois
+        celAnilha = `
+          <div class="num-anilha-wrap">
+            <span class="num-anilha-old" style="color:var(--text)">${a.anilha}</span>
+            <span class="num-anilha-new">L: ${numLegadoDesc}</span>
+          </div>`;
+      } else {
+        // Caso C: número direto, sem legado relevante
+        celAnilha = `<span class="num-anilha">${a.anilha}</span>`;
+      }
+    }
+    tr.insertCell().innerHTML = celAnilha;
+    // Destaca linha com legado diferente (não apenas mesmo contrato com L-hemp)
+    const temLegadoDif = a.contratos.some(c => isLegadoDiferente(a.anilha, c.descricao));
+    if (temLegadoDif) tr.className = 'row-legacy';
+
+    tr.insertCell().innerHTML = `<span class="nome-cliente">${a.nome}</span>`;
+    let tags = '<div class="contract-tags">';
+    for (const c of a.contratos) {
+      // Mostra número antigo do legado junto com a tag
+      // Só mostra tag LEGADO e número antigo quando for legado diferente do contrato atual
+      const eLegadoDif = isLegadoDiferente(a.anilha, c.descricao);
+      const numAnt = eLegadoDif ? numDoLegado(c.descricao) : null;
+      const tagExtra = numAnt ? ` <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#c084fc">(${numAnt})</span>` : '';
+      const tipoTag = eLegadoDif ? 'ctag-leg' : (isLegado(c.descricao) ? 'ctag-new' : 'ctag-new');
+      const labelTag = eLegadoDif ? 'LEGADO' : 'NOVO';
+      tags += `<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+        <span class="ctag ${tipoTag}">${labelTag}</span>${tagExtra}
+        <span class="pill ${c.cancelado?'pill-r':'pill-g'}"><span class="dot"></span>${c.status}</span>
+      </div>`;
+    }
+    tags += '</div>';
+    tr.insertCell().innerHTML = tags;
+    tr.insertCell().innerHTML = `<span class="pill ${a.compativel?'pill-g':'pill-r'}"><span class="dot"></span>${a.compativel?'COMPATÍVEL':'CANCELADO'}</span>`;
+    tr.insertCell().innerHTML = `<span class="addr-text">${a.endereco||'—'}</span>`;
+    tr.insertCell().innerHTML = a.numCasa ? `<span class="addr-num">${a.numCasa}</span>` : `<span style="color:var(--text3);font-size:11px">—</span>`;
+  }
+  return tbl;
+}
+
+// ─── VALIDAÇÃO ────────────────────────────────────────────
+function irValidacao() {
+  renderValidacao();
+  showPanel(4);
+}
+
+function renderValidacao() {
+  const grid = document.getElementById('val-grid');
+  grid.innerHTML = '';
+  const comp = anilhas.filter(a => a.compativel);
+
+  comp.forEach((a, i) => {
+    const card = document.createElement('div');
+    card.className = 'vcard';
+    card.id = `vc-${i}`;
+    card.style.animationDelay = `${i*35}ms`;
+
+    let endHtml = a.endereco || '—';
+    if (a.numCasa) {
+      endHtml = a.endereco.replace(new RegExp(`(,\\s*)(${a.numCasa})`), '$1<span class="hn">$2</span>');
+      if (endHtml === a.endereco) endHtml = a.endereco.replace(a.numCasa, `<span class="hn">${a.numCasa}</span>`);
+    }
+
+    card.innerHTML = `
+      <div>
+        <div class="vc-num">${a.anilha}</div>
+        <div style="margin-top:4px">
+          <span class="pill pill-g" style="font-size:9px;padding:1px 6px"><span class="dot"></span>COMPATÍVEL</span>
+        </div>
+      </div>
+      <div class="vc-name">${a.nome}</div>
+      <div class="vc-addr">${endHtml}</div>
+      <div class="vc-inp-wrap">
+        <div class="vc-inp-lbl">Nº pelo técnico</div>
+        <input type="text" class="vc-inp" id="vi-${i}" placeholder="ex: 145"
+          oninput="validarUm(${i})"
+          ${!a.numCasa?'disabled style="opacity:.4"':''} />
+      </div>
+      <div class="vc-res pend" id="vr-${i}">— aguardando</div>
+    `;
+    grid.appendChild(card);
+  });
+  atualizarResumoVal();
+}
+
+function validarUm(i) {
+  const comp = anilhas.filter(a => a.compativel);
+  const a    = comp[i];
+  const inp  = document.getElementById(`vi-${i}`);
+  const res  = document.getElementById(`vr-${i}`);
+  const card = document.getElementById(`vc-${i}`);
+  const val  = inp.value.trim();
+  card.classList.remove('ok','bad','unk');
+  res.className = 'vc-res';
+  if (!a.numCasa) { res.classList.add('unk'); res.textContent='⚠ sem número'; card.classList.add('unk'); }
+  else if (!val)  { res.classList.add('pend'); res.textContent='— aguardando'; }
+  else if (val === a.numCasa) { res.classList.add('ok'); res.textContent='✓ CONFERE'; card.classList.add('ok'); }
+  else { res.classList.add('bad'); res.textContent=`✗ DIVERGE\nCad: ${a.numCasa} · Téc: ${val}`; card.classList.add('bad'); }
+  atualizarResumoVal();
+}
+
+function validarTodos() {
+  anilhas.filter(a=>a.compativel).forEach((_,i)=>validarUm(i));
+}
+function limparVal() {
+  anilhas.filter(a=>a.compativel).forEach((_,i)=>{
+    const inp=document.getElementById(`vi-${i}`);
+    const res=document.getElementById(`vr-${i}`);
+    const card=document.getElementById(`vc-${i}`);
+    if(inp) inp.value='';
+    if(res){res.className='vc-res pend';res.textContent='— aguardando';}
+    if(card) card.classList.remove('ok','bad','unk');
+  });
+  atualizarResumoVal();
+}
+function atualizarResumoVal() {
+  const comp=anilhas.filter(a=>a.compativel);
+  let ok=0,bad=0,unk=0,pend=0;
+  comp.forEach((a,i)=>{
+    const inp=document.getElementById(`vi-${i}`);
+    const val=inp?inp.value.trim():'';
+    if(!a.numCasa){unk++;return;}
+    if(!val){pend++;return;}
+    val===a.numCasa?ok++:bad++;
+  });
+  document.getElementById('vc-ok').textContent=ok;
+  document.getElementById('vc-bad').textContent=bad;
+  document.getElementById('vc-unk').textContent=unk;
+  document.getElementById('vc-pend').textContent=pend;
+}
+
+// ─── COPIAR RELATÓRIO ─────────────────────────────────────
+function copiarRelatorio() {
+  const comp = anilhas.filter(a=>a.compativel);
+  const canc = anilhas.filter(a=>a.todoCancelado);
+  let txt = `📋 RELATÓRIO DE ANILHAS CTO\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+  txt += `Total: ${anilhas.length} | ✅ Compatíveis: ${comp.length} | ❌ Cancelados: ${canc.length}\n\n`;
+  if (comp.length) {
+    txt += `✅ ANILHAS COMPATÍVEIS:\n`;
+    comp.forEach(a => {
+      txt += `  • ${a.anilha} — ${a.nome}\n    📍 ${a.endereco}${a.numCasa?` (casa ${a.numCasa})`:''}\n`;
+      if (a.temLegado) txt += `    ⚡ possui contrato legado migrado\n`;
+    });
+    txt += '\n';
+  }
+  if (canc.length) {
+    txt += `❌ TODOS CANCELADOS:\n`;
+    canc.forEach(a => txt += `  • ${a.anilha} — ${a.nome}\n    📍 ${a.endereco}\n`);
+  }
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=document.getElementById('btn-copy-rel');
+    btn.textContent='✓ Copiado!';
+    setTimeout(()=>btn.textContent='⧉ Copiar Relatório',2000);
+  });
+}
+
+function copiarSecao(btn) {
+  const rows = btn.closest('.result-section').querySelectorAll('tbody tr');
+  let txt='';
+  rows.forEach(tr=>{
+    const cells=tr.querySelectorAll('td');
+    if(cells.length>=5){
+      const a=cells[0].textContent.trim();
+      const c=cells[1].textContent.trim();
+      const e=cells[4].textContent.trim();
+      const n=cells[5].textContent.trim();
+      txt+=`${a} — ${c} | ${e}${n&&n!=='—'?` (nº ${n})`:''}\n`;
+    }
+  });
+  navigator.clipboard.writeText(txt).then(()=>{
+    const orig=btn.textContent;
+    btn.textContent='✓ copiado!';
+    setTimeout(()=>btn.textContent=orig,1800);
+  });
+}
+
+// ─── NAVEGAÇÃO ────────────────────────────────────────────
+function voltarPasso1() { showPanel(1); }
+function voltarResultado() { showPanel(3); }
+function novaConsulta() {
+  document.getElementById('input-resultado').value='';
+  showPanel(1);
+}
+function limparTudo() {
+  document.getElementById('input-anilhas').value='';
+  document.getElementById('input-resultado').value='';
+  document.getElementById('live-ct1').textContent='0 anilhas';
+  document.getElementById('live-ct1').className='live-ct';
+  document.getElementById('info-vazio').classList.remove('on');
+  const refRes = document.getElementById('ref-resultado');
+  if (refRes) refRes.style.display = 'none';
+  anilhas=[]; anilhasInput=[];
+  showPanel(1);
+}
+
+// ─── RECEBER DADOS — EXTENSÃO, POSTMESSAGE OU EVENTO ────────
+
+// Função global chamada diretamente pelo executeScript da extensão
+window.receberDadosExtensao = function(txt) {
+  if (!txt || !txt.trim()) return;
+  aplicarDadosRecebidos(txt);
+};
+
+// Evento customizado (fallback da extensão)
+window.addEventListener('SINAIS_EXTENSAO', function(e) {
+  if (!e.detail || !e.detail.trim()) return;
+  aplicarDadosRecebidos(e.detail);
+});
+
+// postMessage (bookmarklet / GitHub Pages)
+window.addEventListener('message', function(e) {
+  const data = e.data;
+  if (!data || data.type !== 'SINAIS_RESULT') return;
+  if (!data.payload || !data.payload.trim()) return;
+  aplicarDadosRecebidos(data.payload);
+});
+
+// Função única que aplica os dados recebidos de qualquer fonte
+function aplicarDadosRecebidos(txt) {
+  mostrarToastRecebido();
+
+  const ta = document.getElementById('input-resultado');
+  ta.value = txt;
+
+  // Se anilhasInput já foi definido pelo abrirSinais, mantém
+  // Caso contrário (extensão/postMessage), extrai do texto sem zeros
+  if (anilhasInput.length === 0) {
+    // Extrai números únicos sem zeros do resultado
+    const vistos = new Set();
+    for (const linha of txt.split('\n')) {
+      const cols = linha.split('\t');
+      if (cols.length < 3) continue;
+      const num = cols[0].replace(/\D/g,'').trim();
+      if (num.length >= 4) vistos.add(num.replace(/^0+/,'') || num);
+    }
+    anilhasInput = Array.from(vistos);
+  }
+
+  contarResultado();
+  showPanel(2);
+  setTimeout(() => { processarResultado(); }, 400);
+}
+
+function mostrarToastRecebido() {
+  const old = document.getElementById('toast-recebido');
+  if (old) old.remove();
+  const t = document.createElement('div');
+  t.id = 'toast-recebido';
+  t.style.cssText = `
+    position:fixed; top:20px; right:20px; z-index:99999;
+    background:#22c55e; color:#fff;
+    font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700;
+    padding:10px 18px; border-radius:8px;
+    box-shadow:0 4px 20px rgba(34,197,94,0.4);
+  `;
+  t.textContent = '⚡ Dados recebidos da extensão!';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+// ─── GERAR BOOKMARKLET ────────────────────────────────────
+(function gerarBookmarklet() {
+  // URL desta página (funciona tanto no GitHub Pages quanto localmente)
+  const validadorURL = window.location.href.split('?')[0].split('#')[0];
+
+  // Código do bookmarklet — lê a tabela do sinais.php e envia via postMessage
+  const bookmarkletCode = `
+(function(){
+  var rows = document.querySelectorAll('table tr');
+  if(!rows || rows.length === 0){
+    alert('Nenhuma tabela encontrada. Execute a consulta primeiro.');
+    return;
+  }
+  var lines = [];
+  rows.forEach(function(tr){
+    var cells = tr.querySelectorAll('td, th');
+    if(cells.length < 3) return;
+    var cols = Array.from(cells).map(function(c){ return c.innerText.trim().replace(/\\n/g,' '); });
+    lines.push(cols.join('\\t'));
+  });
+  var txt = lines.join('\\n');
+  if(!txt.trim()){ alert('Tabela vazia.'); return; }
+  var wins = window.opener;
+  if(!wins){
+    // Tenta abrir o validador se não tiver opener
+    var w = window.open('${validadorURL}');
+    setTimeout(function(){ w.postMessage({type:'SINAIS_RESULT', payload:txt},'*'); }, 1500);
+  } else {
+    wins.postMessage({type:'SINAIS_RESULT', payload:txt},'*');
+    wins.focus();
+  }
+  var el = document.createElement('div');
+  el.style.cssText = 'position:fixed;top:20px;right:20px;z-index:99999;background:#22c55e;color:#fff;font-family:monospace;font-size:14px;font-weight:bold;padding:12px 20px;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.3)';
+  el.textContent = '✓ Dados enviados para o Validador!';
+  document.body.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 3000);
+})();
+  `.trim().replace(/\s+/g, ' ');
+
+  const href = 'javascript:' + encodeURIComponent(bookmarkletCode);
+  const link = document.getElementById('bookmarklet-link');
+  if (link) link.href = href;
+})();
+
+</script>
+</body>
+</html>
