@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Validador de Anilhas CTO — InternetWay</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://unpkg.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -168,14 +169,22 @@ textarea:focus { border-color:var(--accent-border); box-shadow:0 0 0 3px var(--a
 /* RESULT SECTIONS */
 .results-wrap { margin-top:1.75rem; display:flex; flex-direction:column; gap:1.5rem; }
 .result-section { border:1px solid var(--bg4); border-radius:var(--rl); overflow:hidden; }
-.result-section.s-green { border-color:var(--green-border); }
-.result-section.s-red   { border-color:var(--red-border); }
+.result-section.s-green  { border-color:var(--green-border); }
+.result-section.s-red    { border-color:var(--red-border); }
+.result-section.s-orange { border-color:rgba(249,115,22,0.35); }
+.result-section.s-purple { border-color:rgba(168,85,247,0.35); }
 .rs-hdr { padding:.75rem 1.1rem; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--bg4); }
-.s-green .rs-hdr { background:rgba(34,197,94,0.07); border-bottom-color:var(--green-border); }
-.s-red   .rs-hdr { background:rgba(239,68,68,0.07);  border-bottom-color:var(--red-border); }
+.s-green  .rs-hdr { background:rgba(34,197,94,0.07);  border-bottom-color:var(--green-border); }
+.s-red    .rs-hdr { background:rgba(239,68,68,0.07);   border-bottom-color:var(--red-border); }
+.s-orange .rs-hdr { background:rgba(249,115,22,0.07);  border-bottom-color:rgba(249,115,22,0.3); }
+.s-purple .rs-hdr { background:rgba(168,85,247,0.07);  border-bottom-color:rgba(168,85,247,0.3); }
 .rs-title { font-size:12px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; font-family:'JetBrains Mono',monospace; display:flex; align-items:center; gap:8px; }
-.s-green .rs-title { color:var(--green); }
-.s-red   .rs-title { color:var(--red); }
+.s-green  .rs-title { color:var(--green); }
+.s-red    .rs-title { color:var(--red); }
+.s-orange .rs-title { color:#f97316; }
+.s-purple .rs-title { color:#a855f7; }
+.pill-o  { background:rgba(249,115,22,0.1); color:#f97316; border:1px solid rgba(249,115,22,0.3); }
+.pill-pu { background:rgba(168,85,247,0.1); color:#a855f7; border:1px solid rgba(168,85,247,0.3); }
 .copy-btn { font-family:'JetBrains Mono',monospace; font-size:11px; background:var(--bg3); border:1px solid var(--accent-border); color:var(--accent); border-radius:5px; padding:4px 10px; cursor:pointer; transition:background .14s; }
 .copy-btn:hover { background:var(--accent-dim); }
 
@@ -290,6 +299,22 @@ tr.row-legacy:hover td { background:rgba(192,132,252,0.1); }
 ::-webkit-scrollbar{width:5px;height:5px} ::-webkit-scrollbar-track{background:var(--bg)} ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px} ::-webkit-scrollbar-thumb:hover{background:var(--bg5)}
 
 footer { border-top:1px solid var(--bg3); padding:1.2rem 0; text-align:center; font-size:11px; color:var(--text3); font-family:'JetBrains Mono',monospace; letter-spacing:.5px; }
+
+/* MODAL MAPA */
+.mapa-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1000; backdrop-filter:blur(6px); }
+.mapa-overlay.on { display:flex; align-items:center; justify-content:center; }
+.mapa-modal { background:var(--bg2); border:1px solid var(--bg4); border-radius:16px; width:92vw; max-width:1100px; height:82vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 24px 80px rgba(0,0,0,0.6); }
+.mapa-header { padding:.9rem 1.2rem; border-bottom:1px solid var(--bg4); display:flex; align-items:center; justify-content:space-between; background:var(--bg3); flex-shrink:0; }
+.mapa-title { font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px; }
+.mapa-title em { color:var(--accent); font-style:normal; }
+.mapa-close { background:none; border:none; color:var(--text2); font-size:20px; cursor:pointer; padding:4px 8px; border-radius:6px; transition:background .15s; }
+.mapa-close:hover { background:var(--bg4); color:var(--text); }
+.mapa-legenda { padding:.5rem 1.2rem; background:var(--bg3); border-bottom:1px solid var(--bg4); display:flex; gap:16px; flex-wrap:wrap; flex-shrink:0; }
+.mapa-leg-item { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--text2); font-family:'JetBrains Mono',monospace; }
+.mapa-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+#mapa-container { flex:1; position:relative; }
+#mapa-frame { width:100%; height:100%; border:none; }
+.mapa-info-bar { padding:.5rem 1.2rem; background:var(--bg3); border-top:1px solid var(--bg4); font-size:11px; color:var(--text3); font-family:'JetBrains Mono',monospace; display:flex; gap:16px; flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -468,8 +493,8 @@ O sistema vai identificar automaticamente:
     </div>
 
     <div class="row" style="margin-bottom:1.5rem">
-      <button class="btn btn-g" onclick="irValidacao()">→ Validar Endereços com Técnico</button>
       <button class="btn btn-y" id="btn-copy-rel" onclick="copiarRelatorio()">⧉ Copiar Relatório</button>
+      <button class="btn btn-s" id="btn-mapa" onclick="abrirMapa()" style="display:none">🗺️ Ver no Mapa</button>
       <button class="btn btn-s" onclick="novaConsulta()">↺ Nova Consulta</button>
     </div>
 
@@ -499,9 +524,27 @@ O sistema vai identificar automaticamente:
 
 </div><!-- /wrap -->
 
+<!-- MODAL DO MAPA -->
+<div class="mapa-overlay" id="mapa-overlay" onclick="fecharMapaClick(event)">
+  <div class="mapa-modal">
+    <div class="mapa-header">
+      <div class="mapa-title">🗺️ Mapa de <em>Endereços</em></div>
+      <button class="mapa-close" onclick="fecharMapa()">✕</button>
+    </div>
+    <div class="mapa-legenda">
+      <div class="mapa-leg-item"><div class="mapa-dot" style="background:#22c55e"></div> Compatível</div>
+      <div class="mapa-leg-item"><div class="mapa-dot" style="background:#ef4444"></div> Cancelado</div>
+      <div class="mapa-leg-item"><div class="mapa-dot" style="background:#f97316"></div> Possível Mudança Endereço</div>
+      <div class="mapa-leg-item"><div class="mapa-dot" style="background:#a855f7"></div> Legado</div>
+    </div>
+    <div id="mapa-container"></div>
+    <div class="mapa-info-bar" id="mapa-info-bar">Geocodificando endereços...</div>
+  </div>
+</div>
+
 <footer>
   <div style="max-width:1380px;margin:0 auto;padding:0 2rem">
-    SISTEMA INTERNO · INTERNETWAY · VALIDADOR DE ANILHAS CTO · v2.1
+    SISTEMA INTERNO · INTERNETWAY · VALIDADOR DE ANILHAS CTO · v3.0
   </div>
 </footer>
 
@@ -535,7 +578,29 @@ function extrairNumLegado(desc) {
   return m ? m[1] : null;
 }
 function isCancelado(status) {
-  return /cancelado/i.test(status);
+  // Encerrado é tratado como Cancelado (mesma categoria)
+  return /cancelado|encerrado/i.test(status);
+}
+
+// Extrai a cidade do endereço: "Rua X, 20 - Marília/SP" → "Marília"
+function extrairCidade(end) {
+  if (!end) return null;
+  // Padrão: "... - Cidade/UF" no final
+  let m = end.match(/-\s*([A-Za-zÀ-ÿ.\s]+?)\s*\/\s*[A-Z]{2}\b/);
+  if (m) return m[1].trim();
+  // Padrão alternativo: "Cidade - UF"
+  m = end.match(/,\s*([A-Za-zÀ-ÿ.\s]+?)\s*[-\/]\s*[A-Z]{2}\b/);
+  if (m) return m[1].trim();
+  return null;
+}
+
+// Classifica se é contrato LEGADO de verdade (número antigo curto)
+// Regra: após remover zeros à esquerda, se tiver MENOS de 5 dígitos = legado
+// "0035380" → "35380" (5 dígitos) = NÃO é legado
+// "0123"    → "123"   (3 dígitos) = É legado
+function isLegadoPorNumero(numRaw) {
+  const semZeros = (numRaw || '').replace(/^0+/, '') || numRaw;
+  return semZeros.length > 0 && semZeros.length < 5;
 }
 function extrairNome(desc) {
   const partes = desc.split(/\s+-\s+/);
@@ -801,6 +866,7 @@ function processarResultado() {
 
     renderResultado();
     showPanel(3);
+    document.getElementById('btn-mapa').style.display = 'flex';
   }, 500);
 }
 
@@ -834,24 +900,44 @@ function parsearTexto(texto) {
     // Só marca como legado se o número dentro do L-hemp for DIFERENTE do contrato atual
     const legado    = isLegadoDiferente(numRaw, descricao);
     const cancelado = isCancelado(status);
+    const encerrado = /encerrado/i.test(status); // mantém texto original
+    const legadoNum = isLegadoPorNumero(numRaw);  // legado por número curto
     const nome      = extrairNome(descricao);
     const numCasa   = extrairNumeroCasa(endereco);
+    const cidade    = extrairCidade(endereco);
 
     if (!mapa.has(numRaw)) {
-      mapa.set(numRaw, { anilha:numRaw, contratos:[], endereco, numCasa });
+      mapa.set(numRaw, { anilha:numRaw, contratos:[], endereco, numCasa, cidade });
     }
     const entry = mapa.get(numRaw);
-    entry.contratos.push({ descricao, status, legado, cancelado, nome });
-    if (!legado && endereco) { entry.endereco = endereco; entry.numCasa = numCasa; }
+    entry.contratos.push({ descricao, status, legado, cancelado, encerrado, legadoNum, nome });
+    if (!legado && endereco) { entry.endereco = endereco; entry.numCasa = numCasa; entry.cidade = cidade; }
   }
 
+  // Determina cidade de referência: a mais frequente entre os contratos
+  const cidadesFreq = new Map();
+  for (const entry of mapa.values()) {
+    if (entry.cidade) cidadesFreq.set(entry.cidade, (cidadesFreq.get(entry.cidade) || 0) + 1);
+  }
+  let cidadeRef = null;
+  let maxFreq = 0;
+  for (const [c, f] of cidadesFreq.entries()) { if (f > maxFreq) { maxFreq = f; cidadeRef = c; } }
+
   return Array.from(mapa.values()).map(entry => {
-    const temAtivo     = entry.contratos.some(c => !c.cancelado);
-    const todoCancelado= entry.contratos.every(c => c.cancelado);
-    const temLegado    = entry.contratos.some(c => c.legado);
-    const ativo        = entry.contratos.find(c => !c.cancelado);
-    const nome         = ativo ? ativo.nome : entry.contratos[0].nome;
-    return { anilha:entry.anilha, nome, contratos:entry.contratos, endereco:entry.endereco, numCasa:entry.numCasa, compativel:temAtivo, todoCancelado, temLegado };
+    const temAtivo      = entry.contratos.some(c => !c.cancelado);
+    const todoCancelado = entry.contratos.every(c => c.cancelado);
+    const temLegado     = entry.contratos.some(c => c.legado);
+    const legadoNum     = entry.contratos.some(c => c.legadoNum);
+    const ativo         = entry.contratos.find(c => !c.cancelado);
+    const nome          = ativo ? ativo.nome : entry.contratos[0].nome;
+    // Cidade diferente: só aplica em contratos ativos (não cancelados)
+    const cidadeDif = temAtivo && !todoCancelado && cidadeRef && entry.cidade
+      && entry.cidade.toLowerCase() !== cidadeRef.toLowerCase();
+    return {
+      anilha: entry.anilha, nome, contratos: entry.contratos,
+      endereco: entry.endereco, numCasa: entry.numCasa, cidade: entry.cidade,
+      compativel: temAtivo, todoCancelado, temLegado, legadoNum, cidadeDif, cidadeRef
+    };
   });
 }
 
@@ -957,11 +1043,12 @@ function buscarAnilhaNoTexto(n, linhas) {
 
 // ─── RENDER RESULTADO ─────────────────────────────────────
 function renderResultado() {
-  const comp   = anilhas.filter(a => a.compativel);
-  const canc   = anilhas.filter(a => a.todoCancelado);
-  const comLeg = anilhas.filter(a => a.temLegado).length;
+  const comp    = anilhas.filter(a => a.compativel && !a.cidadeDif);
+  const canc    = anilhas.filter(a => a.todoCancelado);
+  const mudEnde = anilhas.filter(a => a.cidadeDif);
+  const legNums = anilhas.filter(a => a.legadoNum);
+  const comLeg  = anilhas.filter(a => a.temLegado).length;
 
-  // Conta quantas foram encontradas via legado/zeros (não direto)
   const viaLegado = anilhasInput.filter(n => {
     const r = mapaBusca.get(n);
     return r && (r.via === 'legado' || r.via === 'zeros');
@@ -972,6 +1059,29 @@ function renderResultado() {
   document.getElementById('c-cancel').textContent = canc.length;
   document.getElementById('c-leg').textContent    = viaLegado || comLeg;
   document.getElementById('c-cto').textContent    = anilhas.length <= 8 ? 'CTO padrão (8p)' : 'CTO ampliada (16p)';
+
+  // Cards dinâmicos de mudança de endereço e legado por número
+  const cardsDiv = document.getElementById('cards-resumo');
+  const cardMud  = document.getElementById('c-mud-wrap');
+  const cardLegN = document.getElementById('c-legn-wrap');
+  if (cardMud)  cardMud.remove();
+  if (cardLegN) cardLegN.remove();
+  if (mudEnde.length > 0) {
+    const d = document.createElement('div');
+    d.id = 'c-mud-wrap';
+    d.className = 'card';
+    d.style.cssText = '--c:#f97316';
+    d.innerHTML = `<div class="card-lbl" style="color:#f97316">Mudança Endereço</div><div class="card-val" style="color:#f97316">${mudEnde.length}</div><div class="card-hint">cidade diferente</div>`;
+    cardsDiv.appendChild(d);
+  }
+  if (legNums.length > 0) {
+    const d = document.createElement('div');
+    d.id = 'c-legn-wrap';
+    d.className = 'card';
+    d.style.cssText = '--c:#a855f7';
+    d.innerHTML = `<div class="card-lbl" style="color:#a855f7">Legados</div><div class="card-val" style="color:#a855f7">${legNums.length}</div><div class="card-hint">numeração antiga</div>`;
+    cardsDiv.appendChild(d);
+  }
 
   const ba = document.getElementById('cto-badge-area');
   const cls = anilhas.length <= 8 ? 'p8' : 'p16';
@@ -1040,8 +1150,10 @@ function renderResultado() {
   const area = document.getElementById('results-area');
   area.innerHTML = '';
 
-  if (comp.length)  area.appendChild(buildSection('s-green', `✓ COMPATÍVEIS — ${comp.length} anilha${comp.length!==1?'s':''}`, comp));
-  if (canc.length)  area.appendChild(buildSection('s-red',   `✗ TODOS CANCELADOS — ${canc.length} anilha${canc.length!==1?'s':''}`, canc));
+  if (comp.length)    area.appendChild(buildSection('s-green',  `✓ COMPATÍVEIS — ${comp.length} anilha${comp.length!==1?'s':''}`, comp));
+  if (mudEnde.length) area.appendChild(buildSection('s-orange', `⚠ POSSÍVEL MUDANÇA DE ENDEREÇO — ${mudEnde.length} anilha${mudEnde.length!==1?'s':''}`, mudEnde));
+  if (canc.length)    area.appendChild(buildSection('s-red',    `✗ TODOS CANCELADOS — ${canc.length} anilha${canc.length!==1?'s':''}`, canc));
+  if (legNums.length) area.appendChild(buildSection('s-purple', `📌 LEGADOS — ${legNums.length} anilha${legNums.length!==1?'s':''}`, legNums));
 }
 
 function buildSection(cls, title, lista) {
@@ -1147,8 +1259,28 @@ function buildTable(lista) {
     }
     tags += '</div>';
     tr.insertCell().innerHTML = tags;
-    tr.insertCell().innerHTML = `<span class="pill ${a.compativel?'pill-g':'pill-r'}"><span class="dot"></span>${a.compativel?'COMPATÍVEL':'CANCELADO'}</span>`;
-    tr.insertCell().innerHTML = `<span class="addr-text">${a.endereco||'—'}</span>`;
+    // Badge de status — mantém texto original (Encerrado aparece como Encerrado)
+    let statusBadge;
+    if (a.cidadeDif) {
+      statusBadge = `<span class="pill pill-o"><span class="dot"></span>⚠ MUDANÇA END.</span>`;
+    } else if (a.legadoNum) {
+      statusBadge = `<span class="pill pill-pu"><span class="dot"></span>📌 LEGADO</span>`;
+    } else if (a.compativel) {
+      statusBadge = `<span class="pill pill-g"><span class="dot"></span>COMPATÍVEL</span>`;
+    } else {
+      statusBadge = `<span class="pill pill-r"><span class="dot"></span>CANCELADO</span>`;
+    }
+    tr.insertCell().innerHTML = statusBadge;
+
+    // Endereço com cidade destacada se diferente
+    let endHtml = a.endereco || '—';
+    if (a.cidadeDif && a.cidade) {
+      endHtml = (a.endereco || '').replace(
+        new RegExp('(' + a.cidade.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'i'),
+        '<span style="color:#f97316;font-weight:700">$1 ⚠</span>'
+      );
+    }
+    tr.insertCell().innerHTML = `<span class="addr-text">${endHtml}</span>`;
     tr.insertCell().innerHTML = a.numCasa ? `<span class="addr-num">${a.numCasa}</span>` : `<span style="color:var(--text3);font-size:11px">—</span>`;
   }
   return tbl;
@@ -1290,11 +1422,160 @@ function copiarSecao(btn) {
   });
 }
 
+// ─── MAPA ─────────────────────────────────────────────────
+let mapaLeaflet = null;
+let mapaCarregado = false;
+
+function abrirMapa() {
+  document.getElementById('mapa-overlay').classList.add('on');
+  if (!mapaCarregado) {
+    mapaCarregado = true;
+    carregarLeaflet(() => renderizarMapa());
+  }
+}
+
+function fecharMapa() {
+  document.getElementById('mapa-overlay').classList.remove('on');
+}
+
+function fecharMapaClick(e) {
+  if (e.target === document.getElementById('mapa-overlay')) fecharMapa();
+}
+
+function carregarLeaflet(cb) {
+  // Carrega CSS do Leaflet
+  if (!document.getElementById('leaflet-css')) {
+    const link = document.createElement('link');
+    link.id = 'leaflet-css';
+    link.rel = 'stylesheet';
+    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(link);
+  }
+  // Carrega JS do Leaflet
+  if (!window.L) {
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.onload = cb;
+    document.head.appendChild(script);
+  } else {
+    cb();
+  }
+}
+
+async function geocodificarEndereco(endereco) {
+  if (!endereco || endereco === '—') return null;
+  // Adiciona "Brasil" para melhorar precisão
+  const query = endereco + ', Brasil';
+  try {
+    const resp = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`,
+      { headers: { 'Accept-Language': 'pt-BR' } }
+    );
+    const data = await resp.json();
+    if (data && data[0]) {
+      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    }
+  } catch {}
+  return null;
+}
+
+async function renderizarMapa() {
+  const container = document.getElementById('mapa-container');
+  const infoBar   = document.getElementById('mapa-info-bar');
+  container.innerHTML = '';
+
+  // Cria div do mapa
+  const mapDiv = document.createElement('div');
+  mapDiv.id = 'leaflet-map';
+  mapDiv.style.cssText = 'width:100%;height:100%';
+  container.appendChild(mapDiv);
+
+  // Inicializa Leaflet
+  if (mapaLeaflet) { mapaLeaflet.remove(); mapaLeaflet = null; }
+  mapaLeaflet = L.map('leaflet-map').setView([-22.2, -49.9], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(mapaLeaflet);
+
+  // Cores por categoria
+  const corPorCategoria = (a) => {
+    if (a.cidadeDif)    return '#f97316';
+    if (a.legadoNum)    return '#a855f7';
+    if (a.compativel)   return '#22c55e';
+    if (a.todoCancelado) return '#ef4444';
+    return '#8baac8';
+  };
+
+  const markers = [];
+  let geocodificados = 0;
+  let total = anilhas.filter(a => a.endereco && a.endereco !== '—').length;
+  infoBar.textContent = `Geocodificando 0 de ${total} endereços...`;
+
+  for (const a of anilhas) {
+    if (!a.endereco || a.endereco === '—') continue;
+
+    const coords = await geocodificarEndereco(a.endereco);
+    geocodificados++;
+    infoBar.textContent = `Geocodificando ${geocodificados} de ${total} endereços...`;
+
+    if (!coords) continue;
+
+    const cor = corPorCategoria(a);
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="
+        width:28px;height:28px;border-radius:50% 50% 50% 0;
+        background:${cor};border:2px solid rgba(255,255,255,0.8);
+        transform:rotate(-45deg);box-shadow:0 2px 8px rgba(0,0,0,0.4);
+      "></div>`,
+      iconSize: [28, 28],
+      iconAnchor: [14, 28],
+      popupAnchor: [0, -30],
+    });
+
+    // Status legível
+    let statusLabel;
+    if (a.cidadeDif)     statusLabel = `⚠️ Possível Mudança de Endereço (${a.cidade} ≠ ${a.cidadeRef})`;
+    else if (a.legadoNum) statusLabel = '📌 Legado';
+    else if (a.compativel) statusLabel = '✅ Compatível';
+    else                  statusLabel = '❌ Todos Cancelados';
+
+    const popupHtml = `
+      <div style="font-family:'JetBrains Mono',monospace;min-width:200px">
+        <div style="font-size:14px;font-weight:700;color:${cor};margin-bottom:4px">${a.anilha}</div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:4px">${a.nome}</div>
+        <div style="font-size:11px;color:#555;margin-bottom:6px">${a.endereco}</div>
+        ${a.numCasa ? `<div style="font-size:13px;font-weight:700;color:#e85d04">Nº ${a.numCasa}</div>` : ''}
+        <div style="font-size:10px;margin-top:6px;color:${cor}">${statusLabel}</div>
+      </div>
+    `;
+
+    const marker = L.marker([coords.lat, coords.lng], { icon });
+    marker.bindPopup(popupHtml, { maxWidth: 260 });
+    marker.addTo(mapaLeaflet);
+    markers.push(marker);
+
+    // Pequena pausa para não sobrecarregar a API do Nominatim
+    await new Promise(r => setTimeout(r, 300));
+  }
+
+  if (markers.length > 0) {
+    const group = L.featureGroup(markers);
+    mapaLeaflet.fitBounds(group.getBounds().pad(0.15));
+    infoBar.textContent = `✓ ${markers.length} de ${total} endereços encontrados no mapa`;
+  } else {
+    infoBar.textContent = '⚠ Nenhum endereço pôde ser localizado';
+  }
+}
+
 // ─── NAVEGAÇÃO ────────────────────────────────────────────
 function voltarPasso1() { showPanel(1); }
 function voltarResultado() { showPanel(3); }
 function novaConsulta() {
   document.getElementById('input-resultado').value='';
+  document.getElementById('btn-mapa').style.display = 'none';
+  mapaCarregado = false;
+  if (mapaLeaflet) { mapaLeaflet.remove(); mapaLeaflet = null; }
   showPanel(1);
 }
 function limparTudo() {
