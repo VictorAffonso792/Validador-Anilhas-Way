@@ -542,6 +542,7 @@ O sistema vai identificar automaticamente:
   <div class="mapa-modal">
     <div class="mapa-header">
       <div class="mapa-title">🗺️ Mapa de <em>Endereços</em></div>
+
       <button class="mapa-close" onclick="fecharMapa()">✕</button>
     </div>
     <div class="mapa-legenda">
@@ -1478,6 +1479,12 @@ function abrirMapa() {
   }
 }
 
+function refazerMapa() {
+  mapaCarregado = false;
+  if (mapaLeaflet) { mapaLeaflet.remove(); mapaLeaflet = null; }
+  carregarLeaflet(() => renderizarMapa());
+}
+
 function fecharMapa() {
   document.getElementById('mapa-overlay').classList.remove('on');
 }
@@ -1528,37 +1535,54 @@ function cidadeDoEndereco(end) {
   return m ? m[1].trim() : 'Marília';
 }
 
+// Monta query limpa para o Nominatim
+// Entrada: "R. XV de Novembro, 305 - Marília/SP"
+// Saída:   "Rua XV de Novembro 305, Marília, SP, Brasil"
+function montarQueryEndereco(end) {
+  if (!end || end === '—') return null;
+
+  // 1. Extrai cidade e estado
+  const mCidade = end.match(/-\s*([A-Za-zÀ-ÿ\s.]+?)\s*\/\s*([A-Z]{2})\b/);
+  const cidade  = mCidade ? mCidade[1].trim() : 'Marília';
+  const estado  = mCidade ? mCidade[2].trim() : 'SP';
+
+  // 2. Remove sufixo " - Cidade/SP" do endereço
+  let rua = end.replace(/-\s*[A-Za-zÀ-ÿ\s.]+\/[A-Z]{2}\b.*$/i, '').trim();
+
+  // 3. Expande abreviações comuns
+  rua = rua
+    .replace(/\bR\.(\s|$)/gi,   'Rua ')
+    .replace(/\bAv\.(\s|$)/gi,  'Avenida ')
+    .replace(/\bPç\.(\s|$)/gi,  'Praça ')
+    .replace(/\bPça\.(\s|$)/gi, 'Praça ')
+    .replace(/\bAl\.(\s|$)/gi,  'Alameda ')
+    .replace(/\bTv\.(\s|$)/gi,  'Travessa ')
+    .replace(/,\s*$/, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+  // 4. Monta query final
+  return `${rua}, ${cidade}, ${estado}, Brasil`;
+}
+
 async function geocodificarEndereco(endereco) {
   if (!endereco || endereco === '—') return null;
 
-  const cidade  = cidadeDoEndereco(endereco) || '';
-  const endLimp = (endereco || '')
-    .replace(/-\s*[A-Za-zÀ-ÿ\s.]+\/[A-Z]{2}.*$/i, '')
-    .replace(/\s{2,}/g, ' ').trim();
+  const query = montarQueryEndereco(endereco);
+  if (!query) return null;
 
-  // Queries do mais específico ao mais genérico
-  const queries = [
-    cidade ? `${endLimp}, ${cidade}, SP` : null,
-    cidade ? `${endLimp}, ${cidade}, Brasil` : null,
-    `${endLimp}, Brasil`,
-    endLimp,
-  ].filter(Boolean);
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=br`;
+    const resp = await fetch(url, {
+      headers: { 'Accept-Language': 'pt-BR', 'User-Agent': 'ValidadorAnilhasWay/3.0' },
+      signal: AbortSignal.timeout(8000)
+    });
+    const data = await resp.json();
+    if (data?.[0]) {
+      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    }
+  } catch {}
 
-  for (const q of queries) {
-    try {
-      const resp = await fetch(
-        `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=1&lang=pt`,
-        { signal: AbortSignal.timeout(6000) }
-      );
-      if (!resp.ok) continue;
-      const data = await resp.json();
-      if (data?.features?.length > 0) {
-        const [lng, lat] = data.features[0].geometry.coordinates;
-        return { lat, lng };
-      }
-    } catch {}
-    await new Promise(r => setTimeout(r, 100));
-  }
   return null;
 }
 
@@ -1639,8 +1663,8 @@ async function renderizarMapa() {
     marker.addTo(mapaLeaflet);
     markers.push(marker);
 
-    // Photon não tem limite rígido — pequena pausa para não sobrecarregar
-    await new Promise(r => setTimeout(r, 200));
+    // Nominatim: 1 req/segundo
+    await new Promise(r => setTimeout(r, 1100));
   }
 
   if (markers.length > 0) {
