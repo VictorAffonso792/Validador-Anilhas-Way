@@ -1528,37 +1528,36 @@ function cidadeDoEndereco(end) {
   return m ? m[1].trim() : 'Marília';
 }
 
-async function geocodificarEndereco(endereco, tentativas = 3) {
+async function geocodificarEndereco(endereco) {
   if (!endereco || endereco === '—') return null;
 
-  const cidade = cidadeDoEndereco(endereco);
-  const endNorm = normalizarEndereco(endereco);
+  const cidade  = cidadeDoEndereco(endereco) || '';
+  const endLimp = (endereco || '')
+    .replace(/-\s*[A-Za-zÀ-ÿ\s.]+\/[A-Z]{2}.*$/i, '')
+    .replace(/\s{2,}/g, ' ').trim();
 
-  // Tenta 3 formatos diferentes em cascata
+  // Queries do mais específico ao mais genérico
   const queries = [
-    `${endNorm}, ${cidade}, SP, Brasil`,           // mais específico
-    `${endNorm}, ${cidade}, Brasil`,               // sem SP
-    `${endNorm}, Brasil`,                          // só endereço
-  ];
+    cidade ? `${endLimp}, ${cidade}, SP` : null,
+    cidade ? `${endLimp}, ${cidade}, Brasil` : null,
+    `${endLimp}, Brasil`,
+    endLimp,
+  ].filter(Boolean);
 
-  for (const query of queries) {
-    for (let t = 0; t < tentativas; t++) {
-      try {
-        const resp = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=br`,
-          { headers: { 'Accept-Language': 'pt-BR' }, signal: AbortSignal.timeout(8000) }
-        );
-        if (!resp.ok) { await new Promise(r => setTimeout(r, 1000)); continue; }
-        const data = await resp.json();
-        if (data && data[0]) {
-          return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), query };
-        }
-      } catch {
-        if (t < tentativas - 1) await new Promise(r => setTimeout(r, 800));
+  for (const q of queries) {
+    try {
+      const resp = await fetch(
+        `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=1&lang=pt`,
+        { signal: AbortSignal.timeout(6000) }
+      );
+      if (!resp.ok) continue;
+      const data = await resp.json();
+      if (data?.features?.length > 0) {
+        const [lng, lat] = data.features[0].geometry.coordinates;
+        return { lat, lng };
       }
-    }
-    // Pausa entre formatos diferentes
-    await new Promise(r => setTimeout(r, 600));
+    } catch {}
+    await new Promise(r => setTimeout(r, 100));
   }
   return null;
 }
@@ -1640,8 +1639,8 @@ async function renderizarMapa() {
     marker.addTo(mapaLeaflet);
     markers.push(marker);
 
-    // Nominatim permite 1 req/segundo — aguarda 1.1s entre cada endereço
-    await new Promise(r => setTimeout(r, 1100));
+    // Photon não tem limite rígido — pequena pausa para não sobrecarregar
+    await new Promise(r => setTimeout(r, 200));
   }
 
   if (markers.length > 0) {
